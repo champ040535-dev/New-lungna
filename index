@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+YAT Smart Farm V3.4
+</title>
+
+
+<link rel="manifest"
+href="manifest.json">
+
+
+<meta name="theme-color"
+content="#1b5e20">
+
+
+<style>
+
+body{
+
+margin:0;
+
+font-family:
+Arial,
+sans-serif;
+
+background:#f2f7f2;
+
+}
+
+
+.header{
+
+background:#1b5e20;
+
+color:white;
+
+padding:20px;
+
+text-align:center;
+
+font-size:24px;
+
+}
+
+
+.login-box{
+
+width:320px;
+
+margin:80px auto;
+
+background:white;
+
+padding:25px;
+
+border-radius:15px;
+
+box-shadow:
+0 5px 20px #ccc;
+
+}
+
+
+input{
+
+width:100%;
+
+padding:12px;
+
+margin:8px 0;
+
+box-sizing:border-box;
+
+}
+
+
+button{
+
+width:100%;
+
+padding:12px;
+
+background:#1b5e20;
+
+color:white;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+}
+
+
+button:hover{
+
+opacity:.8;
+
+}
+
+
+#dashboard{
+
+display:none;
+
+padding:20px;
+
+}
+
+
+.card{
+
+background:white;
+
+padding:20px;
+
+margin:10px;
+
+border-radius:15px;
+
+box-shadow:
+0 3px 10px #ddd;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+🌱 YAT Smart Farm V3.4
+
+</div>
+
+
+<div class="login-box"
+id="login">
+
+
+<h3>
+Admin Login
+</h3>
+
+
+<input id="email"
+type="email"
+placeholder="Email">
+
+
+<input id="password"
+type="password"
+placeholder="Password">
+
+
+<button onclick="login()">
+
+เข้าสู่ระบบ
+
+</button>
+
+
+</div>
+<div id="dashboard">
+
+
+<div class="card">
+
+<h2>
+System Status
+</h2>
+
+
+<p>
+Device :
+<span id="device">
+Offline
+</span>
+</p>
+
+
+<p>
+Mode :
+<span id="mode">
+-
+</span>
+</p>
+
+
+<p>
+RTC :
+<span id="time">
+-
+</span>
+</p>
+
+
+</div>
+
+
+
+<div class="card">
+
+<h2>
+Control
+</h2>
+
+
+<button onclick="control('pump',true)">
+เปิดปั๊มน้ำ
+</button>
+
+<br><br>
+
+
+<button onclick="control('pump',false)">
+ปิดปั๊มน้ำ
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('zone1',true)">
+เปิด Zone 1
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('zone1',false)">
+ปิด Zone 1
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('zone2',true)">
+เปิด Zone 2
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('zone2',false)">
+ปิด Zone 2
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('light',true)">
+เปิดไฟ
+</button>
+
+
+<br><br>
+
+
+<button onclick="control('light',false)">
+ปิดไฟ
+</button>
+
+
+</div>
+
+
+
+<div class="card">
+
+<h2>
+Auto / Manual
+</h2>
+
+
+<button onclick="setMode('AUTO')">
+
+AUTO
+
+</button>
+
+
+<br><br>
+
+
+<button onclick="setMode('MANUAL')">
+
+MANUAL
+
+</button>
+
+
+</div>
+
+
+</div>
+<!-- Firebase -->
+
+<script type="module">
+
+import {
+ initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+
+import {
+
+getDatabase,
+ref,
+set,
+onValue
+
+}
+from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+
+//================ FIREBASE CONFIG ================
+
+const firebaseConfig = {
+
+apiKey:"",
+authDomain:"",
+databaseURL:"",
+projectId:""
+
+};
+
+
+const app =
+initializeApp(firebaseConfig);
+
+
+const db =
+getDatabase(app);
+
+
+//================ LOGIN ================
+
+window.login=function(){
+
+let email =
+document.getElementById("email").value;
+
+
+let pass =
+document.getElementById("password").value;
+
+
+if(email && pass){
+
+
+document.getElementById("login")
+.style.display="none";
+
+
+document.getElementById("dashboard")
+.style.display="block";
+
+
+loadStatus();
+
+
+}
+
+else{
+
+alert("กรอกข้อมูล Login");
+
+}
+
+};
+
+
+//================ STATUS =================
+
+function loadStatus(){
+
+const deviceRef =
+ref(db,"devices/YAT-FARM-001");
+
+
+onValue(deviceRef,(snap)=>{
+
+
+let data =
+snap.val();
+
+
+if(data){
+
+
+document.getElementById("device")
+.innerHTML="Online";
+
+
+document.getElementById("mode")
+.innerHTML=data.mode || "-";
+
+
+document.getElementById("time")
+.innerHTML=data.time || "-";
+
+
+}
+
+
+});
+
+
+}
+
+
+//================ CONTROL =================
+
+window.control=function(name,state){
+
+
+set(
+
+ref(
+db,
+"devices/YAT-FARM-001/control/"+name
+),
+
+state
+
+);
+
+
+}
+
+
+
+window.setMode=function(mode){
+
+
+set(
+
+ref(
+db,
+"devices/YAT-FARM-001/control/mode"
+),
+
+mode
+
+);
+
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
