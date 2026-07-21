@@ -1,0 +1,48 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "devices": {
+      "$deviceId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+
+        "control": {
+          ".validate": "newData.hasChildren()"
+        },
+
+        "status": {
+          ".read": "auth != null"
+        },
+
+        "config": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
+
+        "schedule": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+
+    "logs": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "errors": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
